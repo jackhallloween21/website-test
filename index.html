@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Upload and Display Images</title>
+    <link href="https://unpkg.com/filepond/dist/filepond.css" rel="stylesheet" />
+    <link href="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.css" rel="stylesheet" />
+    <script src="https://unpkg.com/filepond-plugin-image-preview/dist/filepond-plugin-image-preview.min.js"></script>
+    <script src="https://unpkg.com/filepond/dist/filepond.min.js"></script>
+  </head>
+  <body>
+    <h1>Upload and Display Images</h1>
+    <input type="file" class="filepond" name="filepond" multiple>
+    
+    <h2>Uploaded Images</h2>
+    <div id="gallery">
+      <!-- Display uploaded images here -->
+    </div>
+    
+    <script>
+      // Initialize FilePond for file uploads
+      const filepond = FilePond.create(document.querySelector(".filepond"), {
+        labelIdle: "Drag & Drop your files or <span class='filepond--label-action'>Browse</span>",
+        imagePreviewHeight: 150,
+        imagePreviewMaxHeight: 150,
+        imagePreviewWidth: 150,
+        imagePreviewMaxWidth: 150,
+        stylePanelLayout: "compact circle",
+        styleLoadIndicatorPosition: "center bottom",
+        styleProgressIndicatorPosition: "right bottom",
+        styleButtonRemoveItemPosition: "left bottom",
+        styleButtonProcessItemPosition: "right bottom",
+        allowMultiple: true,
+        allowImagePreview: true,
+        allowImageFilter: true,
+        maxFiles: 10,
+        server: {
+          process: (fieldName, file, metadata, load, error, progress, abort) => {
+            // Save file to localStorage
+            const files = JSON.parse(localStorage.getItem("files")) || [];
+            files.push({ name: file.name, caption: metadata.caption });
+            localStorage.setItem("files", JSON.stringify(files));
+            load();
+          },
+          remove: (source, load, error) => {
+            // Remove file from localStorage
+            const files = JSON.parse(localStorage.getItem("files")) || [];
+            const index = files.findIndex(file => file.name === source);
+            if (index !== -1) {
+              files.splice(index, 1);
+              localStorage.setItem("files", JSON.stringify(files));
+            }
+            load();
+          }
+        }
+      });
+
+      // Display uploaded images from localStorage
+      const gallery = document.getElementById("gallery");
+      const files = JSON.parse(localStorage.getItem("files")) || [];
+      files.forEach(file => {
+        const img = document.createElement("img");
+        img.src = URL.createObjectURL(new Blob([], { type: file.type }));
+        img.alt = file.caption;
+        const caption = document.createElement("p");
+        caption.textContent = file.caption;
+        gallery.appendChild(img);
+        gallery.appendChild(caption);
+      });
+    </script>
+  </body>
+</html>
